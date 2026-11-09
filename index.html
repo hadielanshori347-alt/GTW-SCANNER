@@ -88,7 +88,7 @@ button.r{background:transparent;color:var(--er);border:1px solid var(--er)}
 // Kolom scan sesuai spreadsheet asli (g=grup, f=nama kolom, c=nomor kolom, l=huruf kolom)
 const MODES={"ibs":{"n":"Inbound Sameday","sheet":"INBOUND SAMEDAY","lanes":[{"g":"BAWEN","f":"INBOUND BAG/AWB/BIG","c":2,"l":"B"},{"g":"PP&PH","f":"INBOUND BAG/AWB/BIG","c":4,"l":"D"},{"g":"LINEHAUL","f":"INBOUND BAG/AWB/BIG","c":6,"l":"F"},{"g":"JABODETABEK","f":"INBOUND BAG/AWB/BIG","c":8,"l":"H"}]},"obs":{"n":"Outbound Sameday","sheet":"OUTBOUND SAMEDAY","lanes":[{"g":"JABODETABEK","f":"OUTBOUND BAG/AWB","c":2,"l":"B"},{"g":"JABODETABEK","f":"OUTBOUND BIG","c":4,"l":"D"},{"g":"JABODETABEK","f":"OUTBOUND DOKEL","c":6,"l":"F"},{"g":"BAWEN","f":"OUTBOUND REG/BIG BAG/AWB IKUT SAMEDAY","c":8,"l":"H"},{"g":"BAWEN","f":"OUTBOUND FROM SKD IKUT SAMEDAY","c":10,"l":"J"},{"g":"CIANJUR","f":"OUTBOUND AWB/BAG","c":12,"l":"L"},{"g":"CIANJUR","f":"OUTBOUND DOKEL","c":14,"l":"N"},{"g":"TASIK","f":"OUTBOUND AWB/BAG","c":16,"l":"P"},{"g":"TASIK","f":"OUTBOUND DOKEL","c":18,"l":"R"},{"g":"GARUT","f":"OUTBOUND AWB/BAG","c":20,"l":"T"},{"g":"GARUT","f":"OUTBOUND DOKEL","c":22,"l":"V"},{"g":"MAJALENGKA","f":"OUTBOUND AWB/BAG","c":24,"l":"X"},{"g":"MAJALENGKA","f":"OUTBOUND DOKEL","c":26,"l":"Z"},{"g":"MAJALENGKA","f":"OUTBOUND 260/SUMEDANG","c":28,"l":"AB"},{"g":"SUKAJADI","f":"OUTBOUND AWB/BAG PH TO PH","c":30,"l":"AD"},{"g":"SUKAJADI","f":"OUTBOUND DOKEL","c":32,"l":"AF"},{"g":"METRO","f":"OUTBOUND AWB/BAG","c":34,"l":"AH"},{"g":"METRO","f":"OUTBOUND DOKEL","c":36,"l":"AJ"},{"g":"DOKEL FROM PP TO PH","f":"IN PH","c":38,"l":"AL"},{"g":"DOKEL FROM PP TO PH","f":"FROM PP","c":39,"l":"AM"}]},"ibn":{"n":"Inbound Nextday","sheet":"INBOUND NEXTDAY","lanes":[{"g":"PP&PH","f":"INBOUND BAG/AWB/BIG","c":2,"l":"B"},{"g":"BAWEN","f":"INBOUND BAG/AWB/BIG","c":4,"l":"D"},{"g":"LINEHAUL","f":"INBOUND BAG/AWB/BIG","c":6,"l":"F"},{"g":"JABODETABEK","f":"INBOUND BAG/AWB/BIG","c":8,"l":"H"}]},"obn":{"n":"Outbound Nextday","sheet":"OUTBOUND NEXTDAY","lanes":[{"g":"JABODETABEK","f":"OUTBOUND BAG/AWB","c":2,"l":"B"},{"g":"JABODETABEK","f":"OUTBOUND DOKEL BAG/AWB","c":4,"l":"D"},{"g":"JABODETABEK","f":"OUTBOUND BIG","c":6,"l":"F"},{"g":"BAWEN","f":"OUTBOUND BAG/AWB","c":7,"l":"G"},{"g":"BAWEN","f":"OUTBOUND DOKEL BAG/AWB","c":9,"l":"I"},{"g":"BAWEN","f":"OUTBOUND BIG","c":11,"l":"K"},{"g":"MAJALENGKA","f":"OUTBOUND AWB/BAG","c":12,"l":"L"},{"g":"MAJALENGKA","f":"OUTBOUND DOKEL","c":14,"l":"N"},{"g":"MAJALENGKA","f":"OUTBOUND 260/SUMEDANG","c":16,"l":"P"},{"g":"METRO","f":"OUTBOUND AWB/BAG","c":18,"l":"R"},{"g":"METRO","f":"OUTBOUND DOKEL","c":20,"l":"T"},{"g":"SUKAJADI","f":"OUTBOUND AWB/BAG","c":22,"l":"V"},{"g":"SUKAJADI","f":"OUTBOUND DOKEL","c":24,"l":"X"},{"g":"TASIK","f":"OUTBOUND AWB/BAG","c":26,"l":"Z"},{"g":"TASIK","f":"OUTBOUND DOKEL","c":28,"l":"AB"},{"g":"GARUT","f":"OUTBOUND AWB/BAG","c":30,"l":"AD"},{"g":"GARUT","f":"OUTBOUND DOKEL","c":32,"l":"AF"},{"g":"DOKEL FROM PP TO PH","f":"IN PH","c":34,"l":"AH"},{"g":"DOKEL FROM PP TO PH","f":"FROM PP","c":35,"l":"AI"}]}};
 // ===== URL Web App Apps Script (yang berakhiran /exec) =====
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbz0WImjZ2bf9BuFQ12umr-9A5wsH9M-HaEGYLLo0JDGspt6vi-dVT3lMJnPQrNsO_r3Pw/exec";
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyV7rQdpFnO2wYKi6g0sW6oXSvAnkrvw_YRSa1GnAbIJyqsnNBF7NYyJj8MzvodZw2KXQ/exec";
 const KEY="scan_ibob_v3";const url=SCRIPT_URL.startsWith("https://")?SCRIPT_URL:"";
 let data={ibs:[],obs:[],ibn:[],obn:[]},mode="ibs",lastTxt="",lastAt=0,scanner=null,usingDetector=false,stream=null,raf=0;
 try{const s=localStorage.getItem(KEY);if(s)data=Object.assign(data,JSON.parse(s))}catch(e){}
@@ -152,9 +152,11 @@ function addCode(raw){
  const code=String(raw||"").trim().toUpperCase();if(!code)return false;
  const LN=MODES[mode].lanes[+$("lane").value],lane=LN.g+" · "+LN.f;
  const dup=data[mode].find(r=>r.code===code&&r.t.slice(0,10)===today());
- if(dup){beep(false);msg("DUPLIKAT: "+code+" sudah discan ("+dup.lane+")","er");return false}
  const rec={id:Date.now()+Math.random(),t:now(),lane,col:LN.c,code,mode,sent:false};data[mode].push(rec);send(rec);
- save();render();beep(true);msg("OK: "+code+" → "+lane,"ok");return true;
+ save();render();
+ if(dup){beep(false);msg("DUPLIKAT: "+code+" sudah discan hari ini ("+dup.lane+"), tetap diinput","wn")}
+ else{beep(true);msg("OK: "+code+" → "+lane,"ok")}
+ return true;
 }
 
 function onScanText(t){const n=Date.now();if(t===lastTxt&&n-lastAt<2000)return;lastTxt=t;lastAt=n;addCode(t)}
